@@ -1,8 +1,10 @@
 # active-area-search-demo
-a minimal 1d demo for active area search, with contrast to expected improvements.
+A minimal 1d demo for active area search, with contrast to expected improvements.
 
-Ref: Yifei Ma, Roman Garnett, Jeff Schneider. Active Area Search via Bayesian Quadrature. AISTATS 2014
+Instruction: run region_reward_1d.m ; the comparison is expected_reward_1d.m .
 
-start with region_reward_1d.m ; the comparison is expected_reward_1d.m .
+Misc: Self-inclusive; gif and pdf files will be overwritten. 
 
-Self-inclusive; gif and pdf files will be rewritte. 
+Ref: Yifei Ma, Roman Garnett, Jeff Schneider. [Active Area Search via Bayesian Quadrature. ](http://www.jmlr.org/proceedings/papers/v33/ma14.pdf) AISTATS 2014.
+
+
