@@ -1,6 +1,6 @@
-For Active Area Search
+For phi, faster normcdf
 
-Copyright (c) 2016, Yifei Ma
+Copyright (c) 2009, Misha Koshelev
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without 
@@ -24,13 +24,3 @@ INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
 CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
 ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
 POSSIBILITY OF SUCH DAMAGE.
-
-Parts of this software are based on the following software:
-
--- GPML toolkit by Carl Edward Rasmussen and Hannes Nickisch, available at http://gaussianprocess.org/gpml/code
-
--- GPML_EXTENSIONS by Roman Garnett, available at https://github.com/rmgarnett/gpml_extensions/
-
--- phi.c - compute Phi for standard normal distribution, by Misha Koshelev, available at https://www.mathworks.com/matlabcentral/fileexchange/24373-faster-normcdf-function
-
-The individual licenses are produced in separate files.
