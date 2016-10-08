@@ -17,7 +17,7 @@ Reproduction of the simulation experiment (Figure 3) in the paper, using a more 
 
 Instruction: run startup.m ; then run demo_10x10.m .
 
-Misc: the data contains one draw from a Gaussian process; one can verify its validity by attempting to optimize the GP hyper-parameters which returns the same choice of parameters.
+Misc: Compile phi.c and solve_chol.c for faster computation. The demo data contains one draw from a Gaussian process; one can verify its validity by attempting to optimize the GP hyper-parameters which returns the same choice of parameters.
 
 Ref: Yifei Ma, Roman Garnett, Jeff Schneider. [Active Area Search via Bayesian Quadrature. ](http://www.jmlr.org/proceedings/papers/v33/ma14.pdf) AISTATS 2014.
 
