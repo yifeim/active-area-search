@@ -21,5 +21,3 @@ Misc: the data contains one draw from a Gaussian process; one can verify its val
 
 Ref: Yifei Ma, Roman Garnett, Jeff Schneider. [Active Area Search via Bayesian Quadrature. ](http://www.jmlr.org/proceedings/papers/v33/ma14.pdf) AISTATS 2014.
 
-
-License: MIT. Contains external softwares.
