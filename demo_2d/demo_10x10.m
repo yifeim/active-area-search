@@ -30,7 +30,7 @@ pool_locs = x_gnd;
 pool_vals = y_gnd;
 for query_count = 0:queryLen-1
   
-  u = aa.Ereward(pool_locs);
+  u = aa.utility(pool_locs);
   [~, ind] = max_tiebreak(u, feasible_locs);
 
   if query_count == 0
@@ -43,7 +43,7 @@ for query_count = 0:queryLen-1
 end
 
 figure(2); clf; 
-imagesc(.5:10, .5:10, 1-reshape(aa.set_region_rewards(), 10, 10));
+imagesc(.5:10, .5:10, 1-reshape(aa.region_rewards(), 10, 10));
 hold on
 y_predict = aa.predict_points(x_gnd);
 [c,h] = contour(reshape(x_gnd(:,1), 50,50), reshape(x_gnd(:,2), 50,50), reshape(y_predict, 50,50), ...
@@ -53,4 +53,8 @@ scatter(aa.collected_locs(:,1), aa.collected_locs(:,2));
 ax = gca;
 ax.YDir = 'normal';
 title('active area search');
+
+
+% ----------------------- aa ----------------------------
+
 
