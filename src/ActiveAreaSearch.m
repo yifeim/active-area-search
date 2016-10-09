@@ -6,6 +6,7 @@ classdef ActiveAreaSearch < ActiveGP
   	highprob    % scalar
     cumfound    % g * 1
     utility_omit_positive_regions = true % only compute expected reward on undiscovered regions
+    pool_locs   % ns * d
   end
 
   properties (Transient=true)
@@ -14,22 +15,33 @@ classdef ActiveAreaSearch < ActiveGP
     alpha       % g * 1, region posterior mean
     beta2       % g * 1, region posterior variance
     region_gpml_alpha   % g * 1, for expected reward computation
+    omegas
+    tV
   end
 
   methods
-    function self = ActiveAreaSearch(gp_model, gp_para, regions, level, side, highprob)
+    function self = ActiveAreaSearch(gp_model, gp_para, pool_locs, regions, level, side, highprob)
 
       self = self@ActiveGP(gp_model, gp_para);
 
-      self.regions    = regions;
-      self.level      = level;
-      self.side       = side;
-      self.highprob   = highprob;
-      self.cumfound   = zeros(size(self.regions, 1), 1);
+      self.regions   = regions;
+      self.level     = level;
+      self.side      = side;
+      self.highprob  = highprob;
+      self.cumfound  = zeros(size(self.regions, 1), 1);
 
-      [~, self.Z] = covSEregion(self.gp_para.cov, self.regions, []);
-      self.alpha = 0 * self.Z;
-      self.beta2 = self.Z;
+      [~, self.Z]    = covSEregion(self.gp_para.cov, self.regions, []);
+      self.alpha     = 0 * self.Z;
+      self.beta2     = self.Z;
+
+      self.pool_locs = pool_locs;
+    end
+
+    function set.pool_locs(self, pool_locs)
+      [omegas, tV] = self.pool_locs_compute_stats(pool_locs);
+      self.pool_locs = pool_locs;
+      self.omegas = omegas;
+      self.tV = tV;
     end
 
     function [new_found, Tg] = update(self, new_locs, new_vals)
@@ -64,12 +76,22 @@ classdef ActiveAreaSearch < ActiveGP
       new_found = 0 + (Tg > self.highprob);
     end 
 
-    function [u, ug] = utility(self, pool_locs)
-      ns = size(pool_locs, 1);
-      g  = size(self.regions, 1);
-
+    function [omegas, tV] = pool_locs_compute_stats(self, pool_locs)
       omegas = covSEregion(self.gp_para.cov, self.regions, pool_locs);
       [~, tV] = self.predict_points(pool_locs);
+    end
+
+    function [u, ug] = utility(self, pool_locs)
+      if nargin<2
+        pool_locs = self.pool_locs;
+        omegas    = self.omegas;
+        tV        = self.tV;
+      else
+        [omegas, tV] = self.pool_locs_compute_stats(pool_locs);
+      end
+
+      ns = size(pool_locs, 1);
+      g  = size(self.regions, 1);
 
       if ~isempty(self.collected_locs)
         ks = self.gp_model.cov(self.gp_para.cov, self.collected_locs, pool_locs);

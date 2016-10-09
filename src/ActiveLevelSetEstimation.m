@@ -10,7 +10,7 @@ classdef ActiveLevelSetEstimation < ActiveGP
   end
 
   methods
-    function self = ActiveLevelSetEstimation(gp_model, gp_para, level, beta_t, eps_band, pool_locs)
+    function self = ActiveLevelSetEstimation(gp_model, gp_para, pool_locs, level, beta_t, eps_band)
 
       self = self@ActiveGP(gp_model, gp_para);
 
@@ -18,9 +18,8 @@ classdef ActiveLevelSetEstimation < ActiveGP
       self.beta_t    = beta_t;
       self.eps_band  = eps_band;
 
-      self.pool_locs = pool_locs;
-
       n = size(pool_locs, 1);
+      self.pool_locs   = pool_locs;
       self.C           = [-inf(n, 1), inf(n, 1)];
       self.lse_outcome = zeros(n, 1);
     end

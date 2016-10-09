@@ -33,21 +33,26 @@ for run_id = 1:num_runs
    y_gnd = chol(K + exp(2*gp_para.lik) * eye(n))' * randn(n,1);
 
    % ground truth
-   gnd = ActiveAreaSearch(gp_model, gp_para, regions, level, side, highprob);
+   gnd = ActiveAreaSearch(gp_model, gp_para, x_gnd, regions, level, side, highprob);
    region_outcome_gnd = gnd.update(x_gnd, y_gnd);
 
-   aas = ActiveAreaSearch        (gp_model, gp_para, regions, level, side, highprob);
-   lse = ActiveLevelSetEstimation(gp_model, gp_para, level, beta_t, eps_band, x_gnd);
-   unc = UncertaintySampling(gp_model, gp_para);
-   rnd = RandomSampling(gp_model, gp_para);
 
-   region_measure_lse = ActiveAreaSearch(gp_model, gp_para, regions,level, side, highprob);
-   region_measure_unc = ActiveAreaSearch(gp_model, gp_para, regions, level, side, highprob);
-   region_measure_rnd = ActiveAreaSearch(gp_model, gp_para, regions, level, side, highprob);
+   % initialize search algorithms
+   aas = ActiveAreaSearch        (gp_model, gp_para, x_gnd, regions, level, side, highprob);
+   lse = ActiveLevelSetEstimation(gp_model, gp_para, x_gnd, level, beta_t, eps_band);
+   unc = UncertaintySampling     (gp_model, gp_para, x_gnd);
+   ei  = ExpectedImprovement     (gp_model, gp_para, x_gnd);
+   rnd = RandomSampling          (gp_model, gp_para, x_gnd);
+
+   % initialize measures
+   region_measure_lse = ActiveAreaSearch(gp_model, gp_para, x_gnd, regions,level, side, highprob);
+   region_measure_unc = ActiveAreaSearch(gp_model, gp_para, x_gnd, regions, level, side, highprob);
+   region_measure_ei  = ActiveAreaSearch(gp_model, gp_para, x_gnd, regions, level, side, highprob);
+   region_measure_rnd = ActiveAreaSearch(gp_model, gp_para, x_gnd, regions, level, side, highprob);
 
    for query_count = 0:queryLen-1
       % aas
-      u = aas.utility(x_gnd);
+      u = aas.utility();
       [~, ind] = max_tiebreak(u,[],false);
       aas.update(x_gnd(ind, :), y_gnd(ind, :));
 
@@ -63,7 +68,7 @@ for run_id = 1:num_runs
       recall_lse(run_id, query_count+1) = (0+region_measure_lse.cumfound>0)'*region_outcome_gnd  / sum(region_outcome_gnd);
 
       % unc
-      u = unc.utility(x_gnd);
+      u = unc.utility();
       [~, ind] = max_tiebreak(u,[],false);
       unc.update(x_gnd(ind, :), y_gnd(ind, :));
 
@@ -71,8 +76,17 @@ for run_id = 1:num_runs
 
       recall_unc(run_id, query_count+1) = (0+region_measure_unc.cumfound>0)'*region_outcome_gnd / sum(region_outcome_gnd);
 
+      % ei
+      u = ei.utility();
+      [~, ind] = max_tiebreak(u,[],false);
+      ei.update(x_gnd(ind, :), y_gnd(ind, :));
+
+      region_measure_ei.update(x_gnd(ind, :), y_gnd(ind, :));
+
+      recall_ei(run_id, query_count+1) = (0+region_measure_ei.cumfound>0)'*region_outcome_gnd / sum(region_outcome_gnd);
+
       % rand
-      u = rnd.utility(x_gnd);
+      u = rnd.utility();
       [~, ind] = max_tiebreak(u,[],false);
       rnd.update(x_gnd(ind, :), y_gnd(ind, :));
 
@@ -81,7 +95,7 @@ for run_id = 1:num_runs
       recall_rnd(run_id, query_count+1) = (0+region_measure_rnd.cumfound>0)'*region_outcome_gnd / sum(region_outcome_gnd);
    end
 
-   [recall_aas(run_id, end), recall_lse(run_id, end), recall_unc(run_id, end), recall_rnd(run_id, end)]
+   [recall_aas(run_id, end), recall_lse(run_id, end), recall_unc(run_id, end), recall_ei(run_id, end), recall_rnd(run_id, end)]
 
 end
 
@@ -90,6 +104,7 @@ errorbar(1:queryLen, mean(recall_aas, 1), std(recall_aas, 1)/sqrt(num_runs))
 hold on
 errorbar(1:queryLen, mean(recall_lse, 1), std(recall_lse, 1)/sqrt(num_runs))
 errorbar(1:queryLen, mean(recall_unc, 1), std(recall_unc, 1)/sqrt(num_runs))
+errorbar(1:queryLen, mean(recall_ei, 1), std(recall_ei, 1)/sqrt(num_runs))
 errorbar(1:queryLen, mean(recall_rnd, 1), std(recall_rnd, 1)/sqrt(num_runs))
 legend('aas','lse','unc','rand');
 grid on;
