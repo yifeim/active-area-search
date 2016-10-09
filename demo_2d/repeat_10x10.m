@@ -21,7 +21,7 @@ eps_band = .1;
 K        = gp_model.cov(gp_para.cov, x_gnd);
 n        = size(x_gnd, 1);
 
-num_runs = 10;
+num_runs = 100;
 queryLen = 80;
 
 recall_aas = nan(num_runs, queryLen);
