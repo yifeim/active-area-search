@@ -35,23 +35,18 @@ classdef ActiveGP < handle
         [ymu, ys2, fmu, fs2] = gp(self.gp_para, self.gp_model.inf, self.gp_model.mean, self.gp_model.cov, self.gp_model.lik, self.collected_locs, self.gp_post, new_x);
       end
     end
-  end
 
-  methods (Access = 'protected')
-    function [] = set_points(self, locations, values)
-      [~, ~, self.gp_post] = gp(self.gp_para, self.gp_model.inf, self.gp_model.mean, self.gp_model.cov, self.gp_model.lik, locations, values(:));
-      self.R = self.gp_post.L .* exp(self.gp_para.lik);
+    function [] = update(self, locations, values)
+      if isempty(self.collected_locs)
+        [~, ~, self.gp_post] = gp(self.gp_para, self.gp_model.inf, self.gp_model.mean, self.gp_model.cov, self.gp_model.lik, locations, values(:));
+        self.R = self.gp_post.L .* exp(self.gp_para.lik);
+      else
+        self.gp_post = update_posterior(self.gp_para, self.gp_model.mean, {self.gp_model.cov}, self.collected_locs, self.gp_post, locations, values(:));
+        self.R = self.gp_post.L .* exp(self.gp_para.lik);
+      end
 
-      self.collected_locs = locations;
-      self.collected_vals = values(:);      
-    end
-
-    function [] = update_points(self, new_locs, new_vals)
-      self.gp_post = update_posterior(self.gp_para, self.gp_model.mean, {self.gp_model.cov}, self.collected_locs, self.gp_post, new_locs, new_vals(:));
-      self.R = self.gp_post.L .* exp(self.gp_para.lik);
-
-      self.collected_locs = [self.collected_locs; new_locs    ];
-      self.collected_vals = [self.collected_vals; new_vals(:) ];
+      self.collected_locs = [self.collected_locs; locations ];
+      self.collected_vals = [self.collected_vals; values(:) ];
     end
   end
 end

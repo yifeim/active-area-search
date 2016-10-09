@@ -4,7 +4,8 @@ classdef ActiveAreaSearch < ActiveGP
   	level       % scalar
   	side        % scalar
   	highprob    % scalar
-    cumfound       % g * 1
+    cumfound    % g * 1
+    utility_omit_positive_regions = true % only compute expected reward on undiscovered regions
   end
 
   properties (Transient=true)
@@ -18,7 +19,7 @@ classdef ActiveAreaSearch < ActiveGP
   methods
     function self = ActiveAreaSearch(gp_model, gp_para, regions, level, side, highprob)
 
-      self = self@ActiveGP(gp_model, gp_para)
+      self = self@ActiveGP(gp_model, gp_para);
 
       self.regions    = regions;
       self.level      = level;
@@ -27,30 +28,40 @@ classdef ActiveAreaSearch < ActiveGP
       self.cumfound   = zeros(size(self.regions, 1), 1);
 
       [~, self.Z] = covSEregion(self.gp_para.cov, self.regions, []);
-
       self.alpha = 0 * self.Z;
       self.beta2 = self.Z;
     end
 
-    function [Tg, new_found] = set(self, locations, values)
-      self.set_points(locations, values)
-      self.set_region_kernel(locations)
-      self.compute_region_stats();
-      [Tg, new_found] = self.region_rewards();
-      self.cumfound = new_found;
+    function [new_found, Tg] = update(self, new_locs, new_vals)
+      update@ActiveGP(self, new_locs, new_vals);
+      [new_found, Tg] = self.update_regions();
     end
 
-    function [Tg, new_found] = update(self, new_locs, new_vals)
-      self.update_points(new_locs, new_vals);
-      self.update_region_kernel(new_locs);
-      self.compute_region_stats();
-      [Tg, new_found] = self.region_rewards();
+    function [new_found, Tg] = update_regions(self)
+      assert(~isempty(self.collected_locs))
+
+      % update region kernel cross terms
+      self.omega = [self.omega, covSEregion(self.gp_para.cov, self.regions, ...
+        self.collected_locs((size(self.omega, 2)+1):end, :))];
+
+      % compute and cache region stats
+      self.alpha = self.omega * self.gp_post.alpha;
+
+      V  = self.R' \ self.omega';
+      self.beta2 = self.Z - sum(V.*V,1)';     % predictive variances
+
+      self.region_gpml_alpha = solve_chol(self.R, self.omega');
+
+      assert(all(self.beta2>0));
+
+      % compute region outcomes using cached region stats
+      [new_found, Tg] = self.region_rewards();
       self.cumfound = self.cumfound + new_found;
     end
 
-    function [Tg, new_found] = region_rewards(self)
+    function [new_found, Tg] = region_rewards(self)
       Tg = normcdf(self.side .* (self.alpha - self.level) ./ sqrt(self.beta2));
-      new_found = Tg > self.highprob;
+      new_found = 0 + (Tg > self.highprob);
     end 
 
     function [u, ug] = utility(self, pool_locs)
@@ -64,6 +75,7 @@ classdef ActiveAreaSearch < ActiveGP
         ks = self.gp_model.cov(self.gp_para.cov, self.collected_locs, pool_locs);
         omega_Vinv_ks = self.region_gpml_alpha' * ks;
       else
+        % avoid calling cov on an empty matrices without the correct shape
         omega_Vinv_ks = 0;
       end
       
@@ -76,34 +88,11 @@ classdef ActiveAreaSearch < ActiveGP
 
       ug = normcdf( (self.side .* (alpham - self.level) - sqrt(tbeta2).*norminv(self.highprob)) ./ tnu );
 
-      u = sum(ug .* repmat(self.cumfound==0, 1, ns), 1);
-    end
-    
-  end
-
-
-  methods (Access = 'private')
-    function [Tg, new_found] = compute_region_stats(self)
-      % region mean integral is linear of queried data 
-      assert(~isempty(self.collected_locs))
-
-      self.alpha = self.omega * self.gp_post.alpha;
-
-      V  = self.R' \ self.omega';
-      self.beta2 = self.Z - sum(V.*V,1)';                       % predictive variances
-
-      self.region_gpml_alpha = solve_chol(self.R, self.omega');
-
-      assert(all(self.beta2>0));
-    end
-
-    function [] = set_region_kernel(self, locations)
-      self.omega = covSEregion(self.gp_para.cov, self.regions, self.collected_locs);
-    end
-
-    function [] = update_region_kernel(self, new_locs)
-      self.omega = [self.omega, covSEregion(self.gp_para.cov, self.regions, ...
-        self.collected_locs((size(self.omega, 2)+1):end, :))];
+      if self.utility_omit_positive_regions
+        u = sum(ug .* repmat(self.cumfound==0, 1, ns), 1);
+      else
+        u = sum(ug, 1);
+      end
     end
   end
 end

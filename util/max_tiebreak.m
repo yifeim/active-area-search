@@ -1,7 +1,10 @@
-function [maxval, maxind] = max_tiebreak(vector, feasible_indicator)
+function [maxval, maxind] = max_tiebreak(vector, feasible_indicator, warningOn)
 
-if nargin>=2
+if nargin<2
+   feasible_indicator = [];
+end
 
+if ~isempty(feasible_indicator)
   if sum(feasible_indicator) > 1, 
     perm_inds = randsample(find(feasible_indicator), sum(feasible_indicator));
   else
@@ -17,8 +20,11 @@ vector_permuted = vector(perm_inds);
 
 [maxval, permuted_max_ind] = max(vector_permuted);
 
+if nargin<3
+   warningOn = false;
+end
 
-if sum(vector_permuted == maxval)>1
+if warningOn and sum(vector_permuted == maxval)>1
   warning('WarnAlgorithm:tiebreakHappen', ...
     sprintf('tie break happened! tie for %d counts.', ...
     sum(vector_permuted == maxval)));
