@@ -31,6 +31,4 @@ Parts of this software are based on the following software:
 
 -- GPML_EXTENSIONS by Roman Garnett, available at https://github.com/rmgarnett/gpml_extensions/
 
--- phi.c - compute Phi for standard normal distribution, by Misha Koshelev, available at https://www.mathworks.com/matlabcentral/fileexchange/24373-faster-normcdf-function
-
 The individual licenses are produced in separate files.
