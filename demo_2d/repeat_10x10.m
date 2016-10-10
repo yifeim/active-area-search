@@ -106,5 +106,6 @@ errorbar(1:queryLen, mean(recall_lse, 1), std(recall_lse, 1)/sqrt(num_runs))
 errorbar(1:queryLen, mean(recall_unc, 1), std(recall_unc, 1)/sqrt(num_runs))
 errorbar(1:queryLen, mean(recall_ei, 1), std(recall_ei, 1)/sqrt(num_runs))
 errorbar(1:queryLen, mean(recall_rnd, 1), std(recall_rnd, 1)/sqrt(num_runs))
-legend('aas','lse','unc','rand');
+legend('aas','lse','unc','ei','rand');
+title('recall curves (mean and standard error from 100 runs)');
 grid on;
